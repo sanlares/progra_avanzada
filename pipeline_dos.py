@@ -16,8 +16,8 @@ import os
 def import_raw(bucket = 'trabajoprogramacion'):
     load_dotenv()  # Carga las variables de entorno del archivo .env
 
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('acces_key')
+    SECRET_KEY=('secret_key')
 
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     bucket_name = bucket 
