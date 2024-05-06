@@ -7,79 +7,89 @@ from dotenv import load_dotenv
 from io import StringIO
 import os
 
-#df_advertisers = pd.read_csv("advertiser_ids") #contiene advertisers activos en inactivos
-#df_ads_views = pd.read_csv("ads_views") #contiene los ads de los advertisers activos cuyas publicidades fueron impression o clikeadas.
-#df_product_views = pd.read_csv("product_views") #dice los productos visitados por cada avertisers
-
-###############esto para usar boto3
+def filtrar_advertisers_activos():
     
-def import_raw(bucket = 'trabajoprogramacion'):
-    load_dotenv()  # Carga las variables de entorno del archivo .env
-
-    ACCESS_KEY = ('acces_key')
-    SECRET_KEY=('secret_key')
-
+    bucket_name='trabajoprogramacion'
+    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
+    SECRET_KEY=('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')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
-    bucket_name = bucket 
-
+    
+    #DESCARGO LOS DATOS DE S3
+    def download_from_s3(file_name):
+        response=s3.get_object(Bucket=bucket_name,Key=file_name)
+        return pd.read_csv(response['Body'])
+    
+    #funcion para subir datos a s3
+    def upload_to_s3(df,file_name):
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer,index=False)
+        s3.put_object(Bucket=bucket_name, Key=file_name, Body= csv_buffer.getvalue())
+        
+    #nombres de los archivos en S3
     ads_views = 'ads_views'
-    file_object_ads_views = s3.get_object(Bucket=bucket_name, Key=ads_views) 
-    df_ads_views = pd.read_csv(file_object_ads_views['Body'])
-
-
     advertiser_ids = 'advertiser_ids'
-    file_object_advertiser_ids = s3.get_object(Bucket=bucket_name, Key=advertiser_ids) 
-    df_advertisers = pd.read_csv(file_object_advertiser_ids['Body'])
-
-
     product_views = 'product_views'
-    file_object_product_views = s3.get_object(Bucket=bucket_name, Key=product_views) 
-    df_product_views = pd.read_csv(file_object_product_views['Body'])
-
-    return df_ads_views, df_advertisers, df_product_views
-
-
-def load_data(ti):
-    df_ads_views, df_advertisers, df_product_views =import_raw()
     
-    ti.xcom_push(key='df_advertisers', value=df_advertisers.to_json(orient='split'))
-    ti.xcom_push(key='df_product_views', value=df_product_views.to_json(orient='split'))
-    ti.xcom_push(key='df_ads_views', value=df_ads_views.to_json(orient='split'))
-    #return df_advertisers,df_product_views, df_ads_views
-
-
-def filtrar_advertisers_activos(ti):
+    #descargar dataframes
+    df_ads_views = download_from_s3(ads_views)
+    df_advertisers = download_from_s3(advertiser_ids)
+    df_product_views = download_from_s3(product_views)
     
-    df_advertisers_json = ti.xcom_pull(task_ids='load_data', key='df_advertisers')
-    df_product_views_json = ti.xcom_pull(task_ids='load_data', key='df_product_views')
-    df_ads_views_json = ti.xcom_pull(task_ids='load_data', key='df_ads_views')
-    
-    df_advertisers = pd.read_json(df_advertisers_json, orient='split')
-    df_product_views = pd.read_json(df_product_views_json, orient='split')
-    df_ads_views = pd.read_json(df_ads_views_json, orient='split')
 
     # Filtrar publicistas activos
     df_active_advertisers = df_advertisers[df_advertisers['status'] == 'activo']
     df_active_products_views = df_product_views[df_product_views['advertiser_id'].isin(df_active_advertisers['advertiser_id'])]
     df_active_ads_views = df_ads_views[df_ads_views['advertiser_id'].isin(df_active_advertisers['advertiser_id'])]
     
-    ti.xcom_push(key='df_active_products_views', value=df_active_products_views.to_json(orient='split'))
-    ti.xcom_push(key='df_active_ads_views', value=df_active_ads_views.to_json(orient='split'))
+    #genera el nombre de los archivos
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    file_active_ads_views = f'active_ads_views_{today_date}.csv'
+    file_active_advertisers = f'active_advertisers_{today_date}.csv'
+    file_active_product_views = f'active_product_views_{today_date}.csv'
     
+    #subo los df filtrados en S3
+    upload_to_s3(df_active_ads_views,file_active_ads_views)
+    upload_to_s3(df_active_advertisers,file_active_advertisers)
+    upload_to_s3(df_active_products_views,file_active_product_views)
+    
+    return 'Data upload successfully'
+
 
 
 #top CTR por cada advertiser se muestran los productos con mejor CTR de los ads en las diferentes paginas web
 #el CTR indica la frecuencia con la que las personas que ven un anucio terminan haciendo clic en el. Es una forma simple de evaluar que tan bien estan funcionando tu anuncios y cuand acticos son para la audiencia.
 #CTR= (numero de clicks/numero de impresiones)*100
 
-def top_ctr(ti):
-    df_active_ads_views_json = ti.xcom_pull(task_ids='filtrar_datos', key='df_active_ads_views')
-    df_active_ads_views = pd.read_json(df_active_ads_views_json, orient='split')
+def top_ctr():
+    #datos AWS
+    bucket_name='trabajoprogramacion'
+    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
+    SECRET_KEY=('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')
+    s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
-    #filtro clicks e impresiones
+    #genero nombre del archivo
+    today_date=datetime.now().strftime('%Y-%m-%d')
+    file_name=f'active_ads_views_{today_date}.csv'
     
-    clicks = df_active_ads_views[df_active_ads_views['type']== 'click'].groupby(['advertiser_id','product_id']).size().rename('clicks')
-    impressiones = df_active_ads_views[df_active_ads_views['type']=='impression'].groupby(['advertiser_id','product_id']).size().rename('impressions')
+    #descargo los dataframes desde S3
+    def download_from_s3(bucket_name,file_name):
+        response = s3.get_object(Bucket=bucket_name,Key=file_name)
+        return pd.read_csv(response['Body'])
+    
+    df_active_ads_views = download_from_s3(bucket_name,file_name)
+    
+    #procesar top ctr
+        #filtro por fecha hoy
+    
+    df_today = df_active_ads_views[df_active_ads_views['date'] == today_date]
+    
+    #filtro clicks e impresiones para la fecha de hoy
+    clicks_today= df_today[df_today['type']=='click']
+    impressions_today= df_today[df_today['type']=='impression']
+
+         #filtro clicks e impresiones    
+    clicks = clicks_today[clicks_today['type']=='click'].groupby(['advertiser_id','product_id']).size().rename('clicks')
+    impressiones = impressions_today[impressions_today['type']=='impression'].groupby(['advertiser_id','product_id']).size().rename('impressions')
     
     #uno los clicks y las impresiones
     ctr_data = pd.concat([clicks,impressiones], axis=1)
@@ -88,27 +98,71 @@ def top_ctr(ti):
     #calculo CTR
     ctr_data['CTR'] = (ctr_data['clicks']/ctr_data['impressions'])*100
     
-    #ordeno y selecciono el top 20 de los productos por CTR para cada advertiser
-    top_20_ctr = ctr_data.groupby('advertiser_id').apply(lambda x: x.nlargest(20, 'CTR')).reset_index(level=0, drop=True)
+    ctr_data.reset_index(inplace=True)
     
-    return top_20_ctr
-
-
-
-def top_product(ti):
-    df_active_products_views_json = ti.xcom_pull(task_ids='filtrar_datos', key='df_active_ads_views')
-    df_active_products_views = pd.read_json(df_active_products_views_json, orient='split')
+    #ordeno y selecciono el top 20 de los productos por CTR para cada advertiser
+    top_20_ctr = ctr_data.groupby('advertiser_id',group_keys=False).apply(lambda x: x.nlargest(20, 'CTR'))
+    top_20_ctr_filtrado = top_20_ctr[(top_20_ctr['CTR'] > 0) & (top_20_ctr['CTR'] !=float('inf'))]
+  
+    
+    #   Subo el archivo a s3
+    
+    def upload_to_s3(df,bucket_name,file_name):
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        s3.put_object(Bucket=bucket_name, Key =file_name, Body=csv_buffer.getvalue())
+        
+    result_file_name = f'top_20_ctr_filtrado_{today_date}.csv'
+    upload_to_s3(top_20_ctr_filtrado,bucket_name,result_file_name)
+    
+    return'Top 20 ctr data upload successfully'
+    
  
+#tpo product
+def top_product():
+
+    #datos AWS
+    bucket_name='trabajoprogramacion'
+    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
+    SECRET_KEY=('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')
+    s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+    
+    #genero nombre del archivo
+    today_date=datetime.now().strftime('%Y-%m-%d')
+    file_name=f'active_product_views_{today_date}.csv'
+    
+    #descargo los dataframes desde S3
+    def download_from_s3(bucket_name,file_name):
+        response = s3.get_object(Bucket=bucket_name,Key=file_name)
+        return pd.read_csv(response['Body'])
+    
+    df_active_product_views = download_from_s3(bucket_name,file_name)
+ 
+ #proceso top product
+            #filtro por fecha hoy
+    
+    df_today = df_active_product_views[df_active_product_views['date'] == today_date]   
     
     #cuento las vistas por cada combinacion de advertiser_id y product_id y por fecha
-    product_views = df_active_products_views.groupby(['advertiser_id','product_id', 'date']).size().rename('visitas')
+    product_views = df_today.groupby(['advertiser_id','product_id', 'date']).size().rename('visitas')
     
     #ordeno y selecciono los top 20 productos por vistas para cada advertiser
     
     top_productos = product_views.reset_index().sort_values(["advertiser_id","date","visitas"], ascending=[True,True, False])
     top_productos = top_productos.groupby(["advertiser_id","date"]).head(20)    
     
-    return top_productos
+     #   Subo el archivo a s3
+    
+    def upload_to_s3(df,bucket_name,file_name):
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        s3.put_object(Bucket=bucket_name, Key =file_name, Body=csv_buffer.getvalue())
+        
+    result_file_name = f'top_productos_{today_date}.csv'
+    upload_to_s3(top_productos,bucket_name,result_file_name)
+    
+    return'Top 20 product data upload successfully'
+ 
 
 
 with DAG(
@@ -117,17 +171,6 @@ with DAG(
          start_date = datetime(2024,4,30),
          catchup=False) as dag:
     
-    import_raw_task=PythonOperator(
-        task_id='import_raw',
-        python_callable=import_raw,
-        op_kwargs={'bucket':'trabajoprogramacion'}
-    )
-    
-    task_load_data = PythonOperator(
-        task_id='load_data',
-        python_callable=load_data,
-        provide_context=True
-    )
     
     task_filtrar_datos = PythonOperator(
         task_id='filtrar_datos',
@@ -148,7 +191,7 @@ with DAG(
     )
 
 
-    import_raw_task>>task_load_data>>task_filtrar_datos>> [task_top_ctr,task_top_product]
+    task_filtrar_datos>> [task_top_ctr,task_top_product]
 
         #t4 = PostgresOperator(
      #   task_id='db_writing',
