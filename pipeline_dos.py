@@ -308,10 +308,12 @@ def write_to_database():
     
     #escribo resultado de la base de datos
     for ctr_result in df_top_ctr.itertuples(): #AGREGAR DATE
-        cur.execute('INSERT INTO top_ctr_table (advertiser_id , product_id,date,clicks,impressions, CTR) VALUES(%s,%s,%s,%s,%s,%s)', (ctr_result.advertiser_id, ctr_result.product_id,ctr_result.date,ctr_result.clicks,ctr_result.impressions,ctr_result.CTR))
+        cur.execute('INSERT INTO top_ctr_table (advertiser_id , product_id,date,clicks,impressions, CTR) VALUES(%s,%s,%s,%s,%s,%s)'
+                    , (ctr_result.advertiser_id, ctr_result.product_id,ctr_result.date,ctr_result.clicks,ctr_result.impressions,ctr_result.CTR))
         
     for product_result in df_top_product.itertuples():
-        cur.execute('INSERT INTO top_products_table (advertiser_id , product_id, date, visitas) VALUES (%s, %s,%s,%s)', (product_result.advertiser_id, product_result.product_id,product_result.date,product_result.visitas))
+        cur.execute('INSERT INTO top_products_table (advertiser_id , product_id, date, visitas) VALUES (%s, %s,%s,%s)'
+                    , (product_result.advertiser_id, product_result.product_id,product_result.date,product_result.visitas))
         
     #confirmo y cierro conexcion
     conn.commit()
