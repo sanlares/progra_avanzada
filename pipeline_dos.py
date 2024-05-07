@@ -178,6 +178,11 @@ def top_ctr():
 
 #prueba = top_ctr()   
 #print(prueba)
+
+"""    #descargo los dataframes desde S3
+    def download_from_s3(bucket_name,file_name):
+        response = s3.get_object(Bucket=bucket_name,Key=file_name)
+        return pd.read_csv(response['Body'])"""
  
 #tpo product
 def top_product():
@@ -192,12 +197,9 @@ def top_product():
     today_date=datetime.now().strftime('%Y-%m-%d')
     file_name=f'active_product_views_{today_date}.csv'
     
-    #descargo los dataframes desde S3
-    def download_from_s3(bucket_name,file_name):
-        response = s3.get_object(Bucket=bucket_name,Key=file_name)
-        return pd.read_csv(response['Body'])
+
     
-    df_active_product_views = download_from_s3(bucket_name,file_name)
+    df_active_product_views = download_from_s3(file_name)
  
  #proceso top product
             #filtro por fecha hoy
@@ -214,13 +216,9 @@ def top_product():
     
      #   Subo el archivo a s3
     
-    def upload_to_s3(df,bucket_name,file_name):
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        s3.put_object(Bucket=bucket_name, Key =file_name, Body=csv_buffer.getvalue())
         
     result_file_name = f'top_productos_{today_date}.csv'
-    upload_to_s3(top_productos,bucket_name,result_file_name)
+    upload_to_s3(top_productos,result_file_name)
     
     return'Top 20 product data upload successfully'
  
@@ -301,13 +299,7 @@ def write_to_database():
     #nombre de los archivos en S3
     
     top_20_ctr_filtrado_filename = f'top_20_ctr_filtrado_{today_date}.csv'
-    top_productos_20_filename = f'top_productos_{today_date}.csv'
-    
-
-    #DESCARGO LOS DATOS DE S3
-    def download_from_s3(file_name):
-        response=s3.get_object(Bucket=bucket_name,Key=file_name)
-        return pd.read_csv(response['Body'])
+    top_productos_20_filename = f'top_productos_{today_date}.csv'   
     
         
     df_top_ctr = download_from_s3(top_20_ctr_filtrado_filename)
