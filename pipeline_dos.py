@@ -11,8 +11,8 @@ import os
 def download_from_s3(file_name):
 
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
     response=s3.get_object(Bucket=bucket_name,Key=file_name)
@@ -84,8 +84,8 @@ def filtrar_advertisers_activos():
 def top_ctr():
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #genero nombre del archivo
@@ -132,8 +132,8 @@ def top_ctr():
 #def top_ctr():
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #genero nombre del archivo
@@ -189,8 +189,8 @@ def top_product():
 
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=(')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #genero nombre del archivo
@@ -230,8 +230,8 @@ def create_tables_if_not_exist():
     conn = psycopg2.connect(
         dbname='postgres',
         user='postgres',
-        password='conesacolegiales',
-        host='programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com',
+        password='',
+        host='',
         port=5432
     )
     cur = conn.cursor()
@@ -281,16 +281,16 @@ def write_to_database():
     conn = psycopg2.connect(
         dbname='postgres',
         user='postgres',
-        password='conesacolegiales',
-        host='programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com',
+        password='',
+        host='',
         port=5432
     )
     cur = conn.cursor()
     
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #fecha actual 
