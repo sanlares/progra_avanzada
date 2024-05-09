@@ -1,12 +1,7 @@
-from fastapi import FastAPI 
 import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv
 import psycopg2
-import os
-
-app = FastAPI()
-
 from fastapi import FastAPI, HTTPException
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -14,8 +9,10 @@ from datetime import datetime
 from psycopg2 import pool
 import os
 
+app = FastAPI()
+
 class Database:
-    # Clase singleton para manejar el pool de conexiones
+    #clase singleton para manejar el pool de conexiones
     _connection_pool = None
 
     @staticmethod
@@ -42,7 +39,7 @@ class Database:
     def close_all_connections():
         Database._connection_pool.closeall()
 
-# Inicializa el pool al iniciar la aplicación
+# inicializa el pool al iniciar la aplicación
 Database.initialize()
 
 @app.get("/recommendations/{ADV}/{Modelo}")
@@ -73,10 +70,10 @@ def recommendations(ADV: str, Modelo: str):
 @app.get("/stats/") 
 def stats(): 
 
-    return f'Random number: {np.random.randint(min+1, max+1)}'
+    return f''
 
 @app.get("/history/{ADV}") 
 def history(): 
 
-    return f'Random number: {np.random.randint(min+1, max+1)}'
+    return f''
 
