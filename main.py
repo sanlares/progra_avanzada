@@ -1,5 +1,9 @@
 from fastapi import FastAPI 
 import numpy as np
+from datetime import datetime
+from dotenv import load_dotenv
+import psycopg2
+import os
 
 app = FastAPI()
 

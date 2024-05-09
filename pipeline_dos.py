@@ -6,6 +6,7 @@ import boto3
 from dotenv import load_dotenv
 from io import StringIO
 import os
+import psycopg2
 
 def filtrar_advertisers_activos():
     
@@ -212,9 +213,7 @@ def top_product():
     upload_to_s3(top_productos,bucket_name,result_file_name)
     
     return'Top 20 product data upload successfully'
- 
-#dbwirting
-import psycopg2
+
 
 def create_tables_if_not_exist():
     # Me conecto a la base de datos
