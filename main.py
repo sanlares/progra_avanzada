@@ -4,9 +4,28 @@ import numpy as np
 app = FastAPI()
 
 @app.get("/recommendations/{ADV}/{Modelo}") 
-def recommendations():
+def recommendations(ADV: int, Modelo: str):
+
+    #me conecto a la base de datos
+    conn = psycopg2.connect(
+        dbname='postgres',
+        user='postgres',
+        password='conesacolegiales',
+        host='programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com',
+        port=5432
+    )
+    cur = conn.cursor()
+
+    today_date = datetime.now().strftime('%Y-%m-%d')
+
+    if Modelo=="TopCTR":
+        table="top_ctr_table"
+    else:
+        table="top_products_table"
     
-    return f'Random number: {np.random.randint(min+1, max+1)}'
+    recomm_table=cur.execute(f'select product_id from {table} where advertiser_id={ADV} and date={today_date}')
+
+    return recomm_table
 
 @app.get("/stats/") 
 def stats(): 
