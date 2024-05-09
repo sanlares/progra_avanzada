@@ -8,23 +8,32 @@ from io import StringIO
 import os
 import psycopg2
 
-def filtrar_advertisers_activos():
+#DESCARGO LOS DATOS DE S3
+def download_from_s3(file_name):
+
+    bucket_name='trabajoprogramacion'
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
+    s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+
+    response=s3.get_object(Bucket=bucket_name,Key=file_name)
+    df=pd.read_csv(response['Body'])
+    return df
     
+#funcion para subir datos a s3
+def upload_to_s3(df,file_name):
+
     bucket_name='trabajoprogramacion'
     ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
     SECRET_KEY=('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')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
-    
-    #DESCARGO LOS DATOS DE S3
-    def download_from_s3(file_name):
-        response=s3.get_object(Bucket=bucket_name,Key=file_name)
-        return pd.read_csv(response['Body'])
-    
-    #funcion para subir datos a s3
-    def upload_to_s3(df,file_name):
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer,index=False)
-        s3.put_object(Bucket=bucket_name, Key=file_name, Body= csv_buffer.getvalue())
+
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer,index=False)
+    s3.put_object(Bucket=bucket_name, Key=file_name, Body= csv_buffer.getvalue())
+
+def filtrar_advertisers_activos():
+        
         
     #nombres de los archivos en S3
     ads_views = 'ads_views'
@@ -42,6 +51,8 @@ def filtrar_advertisers_activos():
     df_active_products_views = df_product_views[df_product_views['advertiser_id'].isin(df_active_advertisers['advertiser_id'])]
     df_active_ads_views = df_ads_views[df_ads_views['advertiser_id'].isin(df_active_advertisers['advertiser_id'])]
     
+    #DUDA: hace falta generar un nuevo archivo por dia? podriamos pisar los archivos o agregar la nueva data a lo ultimo de cada .csv con un campo fecha
+
     #genera el nombre de los archivos
     today_date = datetime.now().strftime('%Y-%m-%d')
     file_active_ads_views = f'active_ads_views_{today_date}.csv'
@@ -61,23 +72,28 @@ def filtrar_advertisers_activos():
 #el CTR indica la frecuencia con la que las personas que ven un anucio terminan haciendo clic en el. Es una forma simple de evaluar que tan bien estan funcionando tu anuncios y cuand acticos son para la audiencia.
 #CTR= (numero de clicks/numero de impresiones)*100
 
+#descargo los dataframes desde S3
+"""def download_from_s3(bucket_name,file_name):
+    response = s3.get_object(Bucket=bucket_name,Key=file_name)
+    return pd.read_csv(response['Body'])"""
+
+"""    def upload_to_s3(df,bucket_name,file_name):
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        s3.put_object(Bucket=bucket_name, Key =file_name, Body=csv_buffer.getvalue())"""
+
 def top_ctr():
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #genero nombre del archivo
     today_date=datetime.now().strftime('%Y-%m-%d')
     file_name=f'active_ads_views_{today_date}.csv'
     
-    #descargo los dataframes desde S3
-    def download_from_s3(bucket_name,file_name):
-        response = s3.get_object(Bucket=bucket_name,Key=file_name)
-        return pd.read_csv(response['Body'])
-    
-    df_active_ads_views = download_from_s3(bucket_name,file_name)
+    df_active_ads_views = download_from_s3(file_name)
     
     #procesar top ctr
         #filtro por fecha hoy
@@ -88,7 +104,7 @@ def top_ctr():
     clicks_today= df_today[df_today['type']=='click']
     impressions_today= df_today[df_today['type']=='impression']
 
-         #filtro clicks e impresiones    
+    #filtro clicks e impresiones    
     clicks = clicks_today[clicks_today['type']=='click'].groupby(['advertiser_id','product_id','date']).size().rename('clicks')
     impressiones = impressions_today[impressions_today['type']=='impression'].groupby(['advertiser_id','product_id','date']).size().rename('impressions')
     
@@ -107,14 +123,9 @@ def top_ctr():
   
     
     #   Subo el archivo a s3
-    
-    def upload_to_s3(df,bucket_name,file_name):
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        s3.put_object(Bucket=bucket_name, Key =file_name, Body=csv_buffer.getvalue())
         
     result_file_name = f'top_20_ctr_filtrado_{today_date}.csv'
-    upload_to_s3(top_20_ctr_filtrado,bucket_name,result_file_name)
+    upload_to_s3(top_20_ctr_filtrado,result_file_name)
     
     return'Top 20 ctr data upload successfully'
 
@@ -122,8 +133,8 @@ def top_ctr():
 #def top_ctr():
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #genero nombre del archivo
@@ -168,26 +179,28 @@ def top_ctr():
 
 #prueba = top_ctr()   
 #print(prueba)
+
+"""    #descargo los dataframes desde S3
+    def download_from_s3(bucket_name,file_name):
+        response = s3.get_object(Bucket=bucket_name,Key=file_name)
+        return pd.read_csv(response['Body'])"""
  
 #tpo product
 def top_product():
 
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=(')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #genero nombre del archivo
     today_date=datetime.now().strftime('%Y-%m-%d')
     file_name=f'active_product_views_{today_date}.csv'
     
-    #descargo los dataframes desde S3
-    def download_from_s3(bucket_name,file_name):
-        response = s3.get_object(Bucket=bucket_name,Key=file_name)
-        return pd.read_csv(response['Body'])
+
     
-    df_active_product_views = download_from_s3(bucket_name,file_name)
+    df_active_product_views = download_from_s3(file_name)
  
  #proceso top product
             #filtro por fecha hoy
@@ -204,13 +217,9 @@ def top_product():
     
      #   Subo el archivo a s3
     
-    def upload_to_s3(df,bucket_name,file_name):
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        s3.put_object(Bucket=bucket_name, Key =file_name, Body=csv_buffer.getvalue())
         
     result_file_name = f'top_productos_{today_date}.csv'
-    upload_to_s3(top_productos,bucket_name,result_file_name)
+    upload_to_s3(top_productos,result_file_name)
     
     return'Top 20 product data upload successfully'
 
@@ -220,8 +229,8 @@ def create_tables_if_not_exist():
     conn = psycopg2.connect(
         dbname='postgres',
         user='postgres',
-        password='conesacolegiales',
-        host='programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com',
+        password='',
+        host='',
         port=5432
     )
     cur = conn.cursor()
@@ -271,16 +280,16 @@ def write_to_database():
     conn = psycopg2.connect(
         dbname='postgres',
         user='postgres',
-        password='conesacolegiales',
-        host='programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com',
+        password='',
+        host='',
         port=5432
     )
     cur = conn.cursor()
     
     #datos AWS
     bucket_name='trabajoprogramacion'
-    ACCESS_KEY = ('AKIATCKANBM2M4RMYV6Y')
-    SECRET_KEY=('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')
+    ACCESS_KEY = ('')
+    SECRET_KEY=('')
     s3 = boto3.client( 's3',region_name='us-east-1', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
     
     #fecha actual 
@@ -289,13 +298,7 @@ def write_to_database():
     #nombre de los archivos en S3
     
     top_20_ctr_filtrado_filename = f'top_20_ctr_filtrado_{today_date}.csv'
-    top_productos_20_filename = f'top_productos_{today_date}.csv'
-    
-
-    #DESCARGO LOS DATOS DE S3
-    def download_from_s3(file_name):
-        response=s3.get_object(Bucket=bucket_name,Key=file_name)
-        return pd.read_csv(response['Body'])
+    top_productos_20_filename = f'top_productos_{today_date}.csv'   
     
         
     df_top_ctr = download_from_s3(top_20_ctr_filtrado_filename)
@@ -304,10 +307,12 @@ def write_to_database():
     
     #escribo resultado de la base de datos
     for ctr_result in df_top_ctr.itertuples(): #AGREGAR DATE
-        cur.execute('INSERT INTO top_ctr_table (advertiser_id , product_id,date,clicks,impressions, CTR) VALUES(%s,%s,%s,%s,%s,%s)', (ctr_result.advertiser_id, ctr_result.product_id,ctr_result.date,ctr_result.clicks,ctr_result.impressions,ctr_result.CTR))
+        cur.execute('INSERT INTO top_ctr_table (advertiser_id , product_id,date,clicks,impressions, CTR) VALUES(%s,%s,%s,%s,%s,%s)'
+                    , (ctr_result.advertiser_id, ctr_result.product_id,ctr_result.date,ctr_result.clicks,ctr_result.impressions,ctr_result.CTR))
         
     for product_result in df_top_product.itertuples():
-        cur.execute('INSERT INTO top_products_table (advertiser_id , product_id, date, visitas) VALUES (%s, %s,%s,%s)', (product_result.advertiser_id, product_result.product_id,product_result.date,product_result.visitas))
+        cur.execute('INSERT INTO top_products_table (advertiser_id , product_id, date, visitas) VALUES (%s, %s,%s,%s)'
+                    , (product_result.advertiser_id, product_result.product_id,product_result.date,product_result.visitas))
         
     #confirmo y cierro conexcion
     conn.commit()
