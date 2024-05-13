@@ -24,11 +24,11 @@ class Database:
         Database._connection_pool = pool.SimpleConnectionPool(
             1, # mínimo número de conexiones
             10, # máximo número de conexiones
-        dbname='postgres',
-        user='postgres',
-        password='conesacolegiales',
-        host='tpprogramacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com',
-        port=5432
+        dbname='',
+        user='',
+        password='',
+        host='',
+        port=''
         )
 
     @staticmethod
