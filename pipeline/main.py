@@ -59,12 +59,13 @@ def recommendations(advertiser_id: str, Modelo: str):
         yesterday_date = (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d')
         if Modelo == 'TopCTR':
                 table = 'top_ctr_table'
+                query = f"SELECT  product_id FROM {table} WHERE date = %s AND advertiser_id = %s;"
         elif Modelo =='Topproducts':
                 table = 'top_products_table'
+                query=f'SELECT  product_id FROM {table} WHERE date = %s AND advertiser_id = %s;'
         else:
             raise HTTPException(status_code=400, detail=f"Modelo desconocido: {Modelo}")
         
-        query=f'SELECT product_id FROM {table} WHERE date = %s AND advertiser_id = %s;'
         cur.execute(query, (yesterday_date, advertiser_id))
         recomm_table = cur.fetchall()
                
