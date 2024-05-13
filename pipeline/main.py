@@ -15,6 +15,13 @@ import boto3
 
 app = FastAPI()
 
+// q: increase the quality of the code?
+// generate a .env file for my passwords
+// create a new file called .env
+
+
+
+
 class Database:
     #clase singleton para manejar el pool de conexiones
     _connection_pool = None
@@ -59,7 +66,7 @@ def recommendations(advertiser_id: str, Modelo: str):
         yesterday_date = (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d')
         if Modelo == 'TopCTR':
                 table = 'top_ctr_table'
-        elif Modelo =='Topproducts':
+        elif Modelo =='ToProduct':
                 table = 'top_products_table'
         else:
             raise HTTPException(status_code=400, detail=f"Modelo desconocido: {Modelo}")
