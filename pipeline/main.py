@@ -163,16 +163,16 @@ def get_history(advertiser_id:str):
         formatted_date = seven_days_ago.strftime('%Y-%m-%d')
         
         #ejecuto la consulta SQL
-        
+
         cur.execute("""
-                    SELECT * FROM  top_ctr_table
+                    SELECT date,product_id,ctr FROM  top_ctr_table
                     WHERE advertiser_id = %s AND date >= %s
                     ORDER BY date DESC
                     """, (advertiser_id,formatted_date))
         ctr_data = cur.fetchall()
         
         cur.execute("""
-                    SELECT * FROM  top_products_table
+                    SELECT date,product_id,visitas FROM  top_products_table
                     WHERE advertiser_id = %s AND date >= %s
                     ORDER BY date DESC
                     """, (advertiser_id,formatted_date))
