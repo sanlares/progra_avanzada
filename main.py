@@ -1,7 +1,6 @@
 import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv
-import psycopg2
 from fastapi import FastAPI, HTTPException
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -20,11 +19,15 @@ class Database:
         Database._connection_pool = pool.SimpleConnectionPool(
             1, # mínimo número de conexiones
             10, # máximo número de conexiones
-            user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASSWORD", "pass"),
-            host=os.getenv("DB_HOST", "programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com"),
-            port=os.getenv("DB_PORT", "5432"),
-            database=os.getenv("DB_NAME", "postgres")
+            user="postgres"#os.getenv("DB_USER", "postgres")
+            ,
+            password="conesacolgiales"#os.getenv("DB_PASSWORD", "conesacolegiales")
+            ,
+            host="programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com"#os.getenv("DB_HOST", "programacion.cpusky0oqvsv.us-east-2.rds.amazonaws.com")
+            ,
+            port="5432"#os.getenv("DB_PORT", "5432")
+            ,
+            database="postgres"#os.getenv("DB_NAME", "postgres")
         )
 
     @staticmethod
