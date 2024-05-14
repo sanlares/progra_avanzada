@@ -1,10 +1,7 @@
 from fastapi import APIRouter
 from database import Database
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
-from psycopg2.extras import RealDictCursor
-from psycopg2 import pool
-import os
+from fastapi import HTTPException
 from datetime import timedelta
 import psycopg2.extras 
 import psycopg2
