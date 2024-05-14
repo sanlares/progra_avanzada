@@ -1,6 +1,6 @@
 FROM python:3.8
 
-WORKDIR pipeline
+WORKDIR /pipeline/
 
 COPY requirements.txt .
 
