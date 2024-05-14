@@ -65,10 +65,10 @@ def recommendations(advertiser_id: str, Modelo: str):
                 table = 'top_ctr_table'
         elif Modelo =='TopProduct':
                 table = 'top_products_table'
+                query=f'SELECT  product_id FROM {table} WHERE date = %s AND advertiser_id = %s;'
         else:
             raise HTTPException(status_code=400, detail=f"Modelo desconocido: {Modelo}")
         
-        query=f'SELECT product_id FROM {table} WHERE date = %s AND advertiser_id = %s;'
         cur.execute(query, (yesterday_date, advertiser_id))
         recomm_table = cur.fetchall()
                
@@ -184,16 +184,16 @@ def get_history(advertiser_id:str):
         formatted_date = seven_days_ago.strftime('%Y-%m-%d')
         
         #ejecuto la consulta SQL
-        
+
         cur.execute("""
-                    SELECT * FROM  top_ctr_table
+                    SELECT date,product_id,ctr FROM  top_ctr_table
                     WHERE advertiser_id = %s AND date >= %s
                     ORDER BY date DESC
                     """, (advertiser_id,formatted_date))
         ctr_data = cur.fetchall()
         
         cur.execute("""
-                    SELECT * FROM  top_products_table
+                    SELECT date,product_id,visitas FROM  top_products_table
                     WHERE advertiser_id = %s AND date >= %s
                     ORDER BY date DESC
                     """, (advertiser_id,formatted_date))
