@@ -8,7 +8,7 @@ import psycopg2
 
 router = APIRouter()
 
-@router.get("/{advertiser_id}")
+@router.get("/history/{advertiser_id}")
 def get_history(advertiser_id:str):
     conn=None
     cur=None
