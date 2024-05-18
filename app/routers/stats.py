@@ -16,7 +16,7 @@ def statitistics_summary():
         conn = Database.get_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
-        yesterday_date = (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d')
+        yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     except Exception as e:
         print(f"An error occurred while connecting to the database: {e}")
