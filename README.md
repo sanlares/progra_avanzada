@@ -13,6 +13,10 @@ PROGRA_AVANZADA/
 ├── app/
 │   ├── __pycache__/
 │   ├── routers/
+        ├──__init.py
+        ├──recommendations.py
+        ├──history.py
+        ├──stats.py
 │   ├── .env
 │   ├── app_requirements.txt
 │   ├── database.py
